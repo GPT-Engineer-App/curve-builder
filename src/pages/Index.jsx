@@ -10,6 +10,7 @@ import {
   VStack,
   HStack,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import {
@@ -22,10 +23,13 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import axios from "axios";
 
 const Index = () => {
   const [rows, setRows] = useState([{ columns: [""] }]);
   const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   const addRow = () => {
     setRows([...rows, { columns: [""] }]);
@@ -74,6 +78,28 @@ const Index = () => {
     setRows(newRows);
   };
 
+  const fetchECBData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get("https://api.exchangeratesapi.io/latest");
+      const data = response.data;
+      const newRows = Object.keys(data.rates).map((key, index) => ({
+        columns: [key, data.rates[key].toString()],
+      }));
+      setRows(newRows);
+    } catch (error) {
+      toast({
+        title: "Error fetching data",
+        description: "There was an error fetching data from the ECB.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const data = rows.map((row, rowIndex) => {
       const rowData = { name: `Row ${rowIndex + 1}` };
@@ -91,6 +117,9 @@ const Index = () => {
         <Heading as="h1" size="xl" mb={6}>
           Dynamic Rows and Columns
         </Heading>
+        <Button onClick={fetchECBData} isLoading={loading} loadingText="Fetching Data">
+          Fetch ECB Data
+        </Button>
         {rows.map((row, rowIndex) => (
           <Box key={rowIndex} w="100%" p={4} borderWidth={1} borderRadius="md">
             <HStack spacing={4} mb={4}>
