@@ -81,20 +81,22 @@ const Index = () => {
   const fetchECBData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("https://api.exchangeratesapi.io/latest");
+      const response = await axios.get("https://api.exchangeratesapi.io/latest")
+        .catch((error) => {
+          toast({
+            title: "Error fetching data",
+            description: "There was an error fetching data from the ECB.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          throw error;
+        });
       const data = response.data;
       const newRows = Object.keys(data.rates).map((key, index) => ({
         columns: [key, data.rates[key].toString()],
       }));
       setRows(newRows);
-    } catch (error) {
-      toast({
-        title: "Error fetching data",
-        description: "There was an error fetching data from the ECB.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
     } finally {
       setLoading(false);
     }
