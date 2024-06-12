@@ -10,6 +10,11 @@ import {
   VStack,
   HStack,
   Text,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from "@chakra-ui/react";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import {
@@ -24,37 +29,16 @@ import {
 } from "recharts";
 
 const Index = () => {
-  const [rows, setRows] = useState([{ columns: [""] }]);
+  const [rows, setRows] = useState(Array(3).fill({ columns: Array(2).fill("") }));
+  const [numColumns, setNumColumns] = useState(2);
   const [chartData, setChartData] = useState([]);
 
   const addRow = () => {
-    setRows([...rows, { columns: [""] }]);
+    setRows([...rows, { columns: Array(numColumns).fill("") }]);
   };
 
   const removeRow = (index) => {
     const newRows = rows.filter((_, rowIndex) => rowIndex !== index);
-    setRows(newRows);
-  };
-
-  const addColumn = (rowIndex) => {
-    const newRows = rows.map((row, index) => {
-      if (index === rowIndex) {
-        return { columns: [...row.columns, ""] };
-      }
-      return row;
-    });
-    setRows(newRows);
-  };
-
-  const removeColumn = (rowIndex, colIndex) => {
-    const newRows = rows.map((row, index) => {
-      if (index === rowIndex) {
-        return {
-          columns: row.columns.filter((_, columnIndex) => columnIndex !== colIndex),
-        };
-      }
-      return row;
-    });
     setRows(newRows);
   };
 
@@ -71,6 +55,14 @@ const Index = () => {
       }
       return row;
     });
+    setRows(newRows);
+  };
+
+  const handleNumColumnsChange = (value) => {
+    setNumColumns(value);
+    const newRows = rows.map((row) => ({
+      columns: Array(value).fill("").map((_, colIndex) => row.columns[colIndex] || ""),
+    }));
     setRows(newRows);
   };
 
@@ -91,15 +83,24 @@ const Index = () => {
         <Heading as="h1" size="xl" mb={6}>
           Dynamic Rows and Columns
         </Heading>
+        <HStack spacing={4} mb={4}>
+          <Text fontSize="lg">Number of Columns:</Text>
+          <NumberInput
+            value={numColumns}
+            min={1}
+            onChange={(valueString, valueNumber) => handleNumColumnsChange(valueNumber)}
+          >
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+        </HStack>
         {rows.map((row, rowIndex) => (
           <Box key={rowIndex} w="100%" p={4} borderWidth={1} borderRadius="md">
             <HStack spacing={4} mb={4}>
               <Text fontSize="lg">Row {rowIndex + 1}</Text>
-              <IconButton
-                aria-label="Add Column"
-                icon={<FaPlus />}
-                onClick={() => addColumn(rowIndex)}
-              />
               <IconButton
                 aria-label="Remove Row"
                 icon={<FaTrash />}
@@ -113,11 +114,6 @@ const Index = () => {
                     value={col}
                     onChange={(e) => handleInputChange(e, rowIndex, colIndex)}
                     placeholder={`Column ${colIndex + 1}`}
-                  />
-                  <IconButton
-                    aria-label="Remove Column"
-                    icon={<FaTrash />}
-                    onClick={() => removeColumn(rowIndex, colIndex)}
                   />
                 </HStack>
               ))}
